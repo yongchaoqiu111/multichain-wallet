@@ -22,19 +22,24 @@ jobs:
       run: flutter pub get
       working-directory: mobile_app/frontend
     
-    - name: Build iOS IPA
+    - name: Build iOS Archive
       run: |
         cd mobile_app/frontend
-        flutter build ipa --release --no-codesign 2>&1 | tee build.log
-        echo "=== Build Output ==="
-        echo "Looking for IPA files..."
-        find build -name "*.ipa" -o -name "*.app" || echo "No IPA/App found"
-        ls -la build/ios/ipa/ 2>/dev/null || echo "ipa directory not found"
-        ls -la build/ios/ 2>/dev/null || echo "ios directory not found"
-        cat build.log
+        flutter build ios --release --no-codesign
+    
+    - name: Create IPA from Archive
+      run: |
+        cd mobile_app/frontend
+        # Create Payload directory
+        mkdir -p Payload
+        # Copy .app to Payload
+        cp -r build/ios/iphoneos/Runner.app Payload/
+        # Create IPA (which is just a zip with .ipa extension)
+        zip -r Runner.ipa Payload
+        ls -la Runner.ipa
     
     - name: Upload IPA Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ios-ipa
-        path: mobile_app/frontend/build/ios/ipa/*.ipa
+        path: mobile_app/frontend/Runner.ipa
