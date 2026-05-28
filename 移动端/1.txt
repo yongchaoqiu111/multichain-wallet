@@ -1,0 +1,16 @@
+当前服务状态
+服务	端口	状态
+钱包 API
+5001
+正常（创建钱包、返回 private_key）
+备份服务 MySQL
+5002
+正常（已有 17+ 条备份记录）
+Nginx
+—
+/api/wallet/backup 等已指向 5002
+已验证接口
+GET https://api.ai656.top/api/health → 200
+POST https://api.ai656.top/api/wallet/create → 200，含 private_key、session_id
+POST https://api.ai656.top/api/wallet/backup → 写入 MySQL 成功
+POST https://api.ai656.top/api/wallet/list → 200，客服可查列表

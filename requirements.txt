@@ -1,0 +1,8 @@
+PyQt6==6.6.1
+web3==6.11.3
+tronpy==0.4.0
+ecdsa==0.19.2
+base58==2.1.1
+mnemonic==0.21
+flask==3.0.0
+flask-cors==4.0.0

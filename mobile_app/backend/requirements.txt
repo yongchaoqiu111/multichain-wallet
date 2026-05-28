@@ -1,0 +1,11 @@
+Flask==2.3.3
+Flask-CORS==4.0.0
+web3==6.10.0
+tronpy==0.9.0
+mnemonic==0.20
+bip32utils==0.6.post1
+pycryptodome==3.19.0
+python-dotenv==1.0.0
+requests==2.31.0
+ecdsa==0.18.0
+base58==2.1.1

@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+*.egg-info/
+dist/
+*.spec
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data
+data/*.json
+data/*.txt
+!data/.gitkeep
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+*.iml
+.pub/
+.pub-cache/
+
+# iOS/macOS
+ios/Pods/
+macos/Flutter/ephemeral/
+
+# Temporary files
+*.rar
+*.zip
+test_output.txt
+test_output.js
+erase_output.txt
+cache/
