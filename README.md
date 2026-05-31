@@ -1,229 +1,209 @@
-# 多链钱包工具 - 完整使用与部署指南
+# 多链钱包 (Multi-Chain Wallet)
 
-## 📋 项目概述
-本项目是一个支持多链（TRON/BSC/ETH）的数字钱包应用，包含桌面端、移动端和Web端。
-- **技术栈**: Python + PyQt6 + Web3 + TronPy + Flutter
-- **架构**: 三端共享核心逻辑，云端API统一交互
+一个支持 TRON、Ethereum、BSC 等多链资产管理的加密货币钱包应用。
 
----
+## 特性
 
-## 🏗️ 架构设计
-### 整体结构
+- 🔐 **安全加密** - 助记词和私钥采用 AES-GCM 加密存储
+- 🌐 **多链支持** - TRON、Ethereum、BSC 等多条区块链
+- 📱 **跨平台** - Android、iOS、Windows 桌面客户端
+-  **资产管理** - 查看余额、交易记录、资产查询
+- 🔄 **转账功能** - 支持链上转账和跨链兑换
+- 🎯 **竞猜系统** - 虚拟赛事竞猜功能
+
+## 项目结构
+
 ```
-┌─────────────────────────────────────────────────┐
-│                  云端服务层                      │
-│  wallet_api_service.py (5001)                   │
-│  server.py (备份服务, 5002)                     │
-└──────────────┬──────────────────────────────────┘
-               │
-       ┌───────┼───────┐
-       ▼       ▼       ▼
-   桌面端    移动端    Web端
-  (PyQt6)  (Flutter) (Flutter)
+qianbao/
+├── mobile_app/          # 移动端应用
+│   ├── frontend/        # Flutter 移动端前端
+│   └── backend/         # Flask 移动端后端 API
+├── desktop/             # Windows 桌面客户端
+── modules/             # 共享模块（钱包核心、配置等）
+├── backend/             # 后端 API 服务
+── data/                # 数据文件
 ```
 
-### 模块职责
-| 模块 | 路径 | 说明 |
-|------|------|------|
-| `modules/wallet_core.py` | 核心逻辑 | 多链支持、密钥管理、交易签名 |
-| `modules/wallet_api.py` | 云端API | 供移动端/Web调用 (5001端口) |
-| `houduan/server.py` | 备份服务 | MySQL数据库存储 (5002端口) |
-| `desktop/main.py` | 桌面端 | PyQt6 UI + 本地API |
-| `mobile_app/` | 移动端 | Flutter Android/iOS/Web |
+## 快速开始
 
----
+### 环境要求
 
-## 一、开发环境运行
+- Python 3.8+
+- Flutter 3.x
+- MySQL 5.7+
+- Node.js 16+ (可选，用于前端)
 
-### 1. 安装依赖
+### 后端配置
+
+1. 复制配置示例文件：
 ```bash
-cd qianbao
+cp .env.example .env
+```
+
+2. 编辑 `.env` 文件，填入你的配置：
+```env
+DB_HOST=localhost
+DB_USER=your_user
+DB_PASSWORD=your_password
+CLIENT_KEY=your_32_byte_key
+SERVER_KEY=your_32_byte_key
+```
+
+3. 安装依赖：
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. 运行程序
+4. 启动后端服务：
 ```bash
+cd backend
+python server.py
+```
+
+### 移动端编译
+
+#### Android
+
+1. 进入 Flutter 项目目录：
+```bash
+cd mobile_app/frontend
+```
+
+2. 配置签名（可选，用于正式发布）：
+   - 生成密钥：`keytool -genkey -v -keystore wallet-release.keystore -alias wallet -keyalg RSA -keysize 2048 -validity 10000`
+   - 创建 `android/key.properties` 文件
+
+3. 编译 APK：
+```bash
+# Debug 版本
+flutter build apk --debug
+
+# Release 版本
+flutter build apk --release
+```
+
+输出位置：`build/app/outputs/flutter-apk/app-release.apk`
+
+#### iOS
+
+需要 macOS 环境：
+```bash
+cd mobile_app/frontend
+flutter build ios --release
+```
+
+### 桌面客户端
+
+```bash
+cd desktop
 python main.py
 ```
 
----
+## 安全说明
 
-## 二、EXE打包方法
+### 加密机制
 
-### Windows系统
-双击运行 `build_exe.bat` 或在命令行执行：
-```bash
-build_exe.bat
-```
+- **客户端加密**：敏感数据（助记词、私钥）在客户端使用 `CLIENT_KEY` 加密
+- **服务器加密**：服务器使用 `SERVER_KEY` 对数据进行二次加密
+- **传输加密**：所有 API 通信使用 HTTPS
 
-打包完成后，EXE文件位于：
-```
-dist\多链钱包工具.exe
-```
+### 密钥管理
 
----
-
-## 三、客户使用指南
-
-### 1. 首次使用
-- 双击 `多链钱包工具.exe`
-- 等待程序启动（首次可能较慢）
-- 在"钱包管理"Tab中创建或导入钱包
-- 选择要操作的区块链网络
-
-### 2. 功能说明
-
-#### 钱包管理
-- 创建新钱包：自动生成私钥和地址
-- 导入钱包：通过私钥导入已有钱包
-- 切换网络：支持BSC/ETH/TRON/Polygon/Avalanche
-
-#### 资产查询
-- 查询当前网络的余额
-- 显示钱包地址和私钥
-- 支持一键复制地址
-
-#### 转账功能
-- 输入接收地址和金额
-- 自动计算Gas费用
-- 确认交易并广播到区块链
-
-#### 交易记录
-- 查看历史交易
-- 显示交易状态和哈希
-- 支持导出交易记录
-
----
-
-## 四、数据文件说明
-
-所有数据保存在 `data/` 目录下：
-
-| 文件名 | 说明 |
-|--------|------|
-| wallets.json | 钱包列表（加密存储） |
-| settings.json | 用户设置 |
-| transactions.json | 交易历史记录 |
-
----
-
-## 五、注意事项与常见问题
-
-⚠️ **重要提醒**：
-
-1. **私钥安全**：私钥是资产的唯一凭证，请妥善保管
-2. **网络要求**：需要能访问区块链RPC节点
-3. **杀毒软件**：可能误报，请添加信任
-4. **首次运行**：解压临时文件，可能较慢
-5. **数据备份**：定期备份 `data/` 目录
-6. **测试先行**：建议先用小额测试转账功能
-
----
-
-## 六、常见问题
-
-### Q1: 程序启动失败？
-A: 检查是否安装了Visual C++运行库，下载地址：
-https://aka.ms/vs/17/release/vc_redist.x64.exe
-
-### Q2: 余额查询失败？
-A: 检查网络连接，确认选择的区块链网络可用
-
-### Q3: 转账失败？
-A: 确认余额充足（包含Gas费），检查接收地址格式
-
-### Q4: 私钥丢失怎么办？
-A: 私钥无法找回，请务必做好备份
-
----
-
-## 六、服务器配置与运维
-### 服务器信息
-- **IP地址**: `47.83.0.101`
-- **SSH用户**: `root`
-- **MySQL密码**: `WalletBackup2026!`
-
-### 常用操作
-```bash
-# 重启所有服务
-bash /root/deploy_server.sh
-
-# 检查服务状态
-ps aux | grep python3
-tail -f /root/wallet/api.log
-
-# Nginx操作
-nginx -t && systemctl reload nginx
-```
-
-### 数据库备份
-```bash
-mysqldump -u root -p'WalletBackup2026!' wallet_backup > backup.sql
-```
-
----
-
-## 七、代码结构与优化建议
-### 核心调用流程
-1. **初始化**: `MultiChainWallet.__init__` → `_load_or_create_wallet` → `_init_evm/tron_wallet`
-2. **余额查询**: `get_balance` → `CHAIN_CONFIG` → `_get_trx/evm_balance`
-3. **转账**: `transfer` → `_transfer_evm/tron` → 广播交易
-
-### 专业级优化方向
-1. **架构重构**: 采用无状态设计，避免全局变量导致串钱包
-2. **安全增强**: 私钥临时派生，用完即销毁，不常驻内存
-3. **节点策略**: 增加超时控制、熔断机制和健康检查
-4. **缓存机制**: 余额查询增加5-10秒本地缓存
-5. **异常处理**: 建立统一的自定义异常体系
-
----
-
-## 八、部署配置修改（改域名只需改4个文件）
-
-### 1. 桌面端钱包备份客户端
-**文件路径**: `desktop/modules/wallet_backup_client.py`  
-**修改位置**: 第21行  
+- 生成随机密钥：
 ```python
-SERVER_URL = "https://api.ai656.top"  # 改成你的域名
+import os
+key = os.urandom(32).hex()
+print(key)  # 64位十六进制字符串
 ```
 
-### 2. 客服解密工具
-**文件路径**: `decrypt_tool_gui.py`  
-**修改位置**: 第19行  
-```python
-DEFAULT_SERVER_URL = "https://api.ai656.top"  # 改成你的域名
+- **重要**：丢失密钥将无法解密钱包数据！
+
+## 数据库配置
+
+### 初始化数据库
+
+```sql
+CREATE DATABASE wallet_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### 3. 手机端前端（Flutter）
-**文件路径**: `mobile_app/frontend/lib/config/api_config.dart`  
-**修改位置**: 第5行  
-```dart
-static const String serverUrl = 'https://api.ai656.top';  // 改成你的域名
+### 数据表结构
+
+项目包含以下主要数据表：
+- `wallets` - 钱包信息
+- `transactions` - 交易记录
+- `users` - 用户信息
+- `backups` - 备份记录
+
+## API 文档
+
+### 钱包管理
+
+- `POST /api/wallet/create` - 创建钱包
+- `GET /api/wallet/list` - 获取钱包列表
+- `POST /api/wallet/backup` - 备份钱包
+- `GET /api/wallet/balance` - 查询余额
+
+### 交易管理
+
+- `POST /api/transaction/send` - 发送交易
+- `GET /api/transaction/history` - 交易历史
+
+## 区块链节点配置
+
+### TRON
+
+```env
+TRON_NODE_URL=https://api.trongrid.io
+TRON_GRID_API_KEY=your_api_key
 ```
 
-### 4. 手机端后端（Python Flask）
-**文件路径**: `mobile_app/backend/.env`  
-**修改位置**: 第5行  
-```bash
-SERVER_DOMAIN="api.ai656.top"  # 改成你的域名（不含协议）
+### Ethereum
+
+```env
+ETH_NODE_URL=https://eth-mainnet.g.alchemy.com/v2/your_key
 ```
 
-#### 快速替换命令（Windows PowerShell）
-```powershell
-(Get-Content desktop\modules\wallet_backup_client.py) -replace 'api\.ai656\.top', '新域名.com' | Set-Content desktop\modules\wallet_backup_client.py
-(Get-Content decrypt_tool_gui.py) -replace 'api\.ai656\.top', '新域名.com' | Set-Content decrypt_tool_gui.py
-(Get-Content mobile_app\frontend\lib\config\api_config.dart) -replace 'api\.ai656\.top', '新域名.com' | Set-Content mobile_app\frontend\lib\config\api_config.dart
-(Get-Content mobile_app\backend\.env) -replace 'api\.ai656\.top', '新域名.com' | Set-Content mobile_app\backend\.env
+### BSC
+
+```env
+BSC_NODE_URL=https://bsc-dataseed.binance.org
 ```
 
-#### 注意事项
-1. **手机端后端的.env文件中只写域名，不要带协议**（如：`api.ai656.top`）
-2. **其他3个文件需要带完整URL**（如：`https://api.ai656.top`）
-3. 修改后记得重启相关服务
-4. 如果使用了HTTPS，确保新域名已配置SSL证书
+## 常见问题
 
----
+### Q: 如何重置数据库？
+A: 删除 `data/` 目录下的数据库文件，重新运行初始化脚本。
 
-**版本**: 1.0.0  
-**技术栈**: Python + PyQt6 + Web3 + TronPy + Flutter  
-**打包工具**: PyInstaller
+### Q: 忘记加密密钥怎么办？
+A: 密钥无法找回，需要重新创建钱包。请务必妥善保管密钥！
+
+### Q: 支持哪些区块链？
+A: 目前支持 TRON、Ethereum、BSC，后续会添加更多链。
+
+## 贡献指南
+
+1. Fork 本项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+## 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 免责声明
+
+本项目仅供学习和研究使用。使用本项目创建的产品时，请遵守当地法律法规。作者不对使用本项目造成的任何损失负责。
+
+## 联系方式
+
+- GitHub Issues: 提交问题和建议
+- Email: your-email@example.com
+
+## 致谢
+
+- [tronpy](https://github.com/iontronic/tronpy) - TRON Python SDK
+- [web3.py](https://github.com/ethereum/web3.py) - Ethereum Python SDK
+- [Flutter](https://flutter.dev/) - 跨平台 UI 框架
+- [Flask](https://flask.palletsprojects.com/) - Python Web 框架

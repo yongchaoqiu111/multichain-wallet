@@ -55,6 +55,12 @@ class WalletStorage {
     return {'address': m['address'] as String, 'chain': m['chain'] as String};
   }
 
+  /// 获取当前活跃钱包地址（简化版）
+  static Future<String?> getCurrentAddress() async {
+    final active = await getActiveWallet();
+    return active?['address'];
+  }
+
   static Future<List<Map<String, dynamic>>> loadTransactions() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_transactionsKey);

@@ -1,3 +1,75 @@
+# ====================
+# 敏感信息 - 绝对不要上传
+# ====================
+
+# 密钥和证书
+*.keystore
+*.jks
+*.p12
+*.pem
+key.properties
+
+# 环境变量和配置
+.env
+*.env.local
+.env.production
+.env.development
+
+# Firebase 配置
+google-services.json
+GoogleService-Info.plist
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+wallet_backups.db
+data/*.db
+data/*.sqlite
+
+# 钱包备份
+wallet_backups/
+*.wallet
+*.backup
+
+# 日志文件
+*.log
+error.log
+access.log
+
+# ====================
+# 构建产物 - 不需要上传
+# ====================
+
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+*.apk
+*.aab
+*.ipa
+*.app
+*.dSYM/
+
+# Android
+android/.gradle/
+android/.idea/
+android/local.properties
+android/*.iml
+android/build/
+android/app/build/
+android/gradle/wrapper/gradle-wrapper.jar
+
+# iOS
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Pods/
+ios/*.xcworkspace
+*.xcuserdata/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -7,46 +79,64 @@ __pycache__/
 env/
 venv/
 ENV/
-build/
-develop-eggs/
-*.egg-info/
 dist/
-*.spec
+*.egg-info/
+.eggs/
 
-# IDE
+# Desktop build
+desktop/build/
+desktop/dist/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ====================
+# IDE 和编辑器
+# ====================
+
+# VS Code
 .vscode/
+*.code-workspace
+
+# IntelliJ/Android Studio
 .idea/
-*.swp
-*.swo
+*.iml
+*.iws
 
-# Data
-data/*.json
-data/*.txt
-!data/.gitkeep
-
-# Logs
-*.log
-
-# OS
+# Windows
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Flutter/Dart
-.dart_tool/
-.packages
-build/
-*.iml
-.pub/
-.pub-cache/
+# ====================
+# 临时文件
+# ====================
 
-# iOS/macOS
-ios/Pods/
-macos/Flutter/ephemeral/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
 
-# Temporary files
-*.rar
-*.zip
-test_output.txt
-test_output.js
-erase_output.txt
-cache/
+# 下载文件夹
+download/*.apk
+download/*.ipa
+
+# ====================
+# 服务器配置（如果有）
+# ====================
+
+nginx*.conf
+*.conf.bak
+
+# ====================
+# 测试和调试脚本（可选）
+# ====================
+
+# 如果需要保留示例，可以注释掉下面这些
+# test_*.py
+# *_test.py
+# debug_*.py

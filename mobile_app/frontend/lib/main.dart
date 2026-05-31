@@ -4,6 +4,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'services/wallet_api_service.dart';
 import 'services/wallet_backup_service.dart';
 import 'services/wallet_storage.dart';
+import 'betting/betting_api_service.dart';
+import 'betting/betting_tab.dart';
 
 void main() {
   runApp(const WalletApp());
@@ -117,7 +119,7 @@ class _MainScreenState extends State<MainScreen> {
             mnemonic: _currentMnemonic,
           ),
           const TransactionHistoryPage(),
-          const SettingsPage(),
+          const BettingTabPage(), // 竞猜Tab
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -146,8 +148,8 @@ class _MainScreenState extends State<MainScreen> {
             label: '记录',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: '设置',
+            icon: Icon(Icons.sports_esports),
+            label: '竞猜',
           ),
         ],
       ),
@@ -1080,24 +1082,210 @@ class _TransferPageState extends State<TransferPage> {
   }
 }
 
-class TransactionHistoryPage extends StatelessWidget {
-  const TransactionHistoryPage({super.key});
+class TransactionHistoryPage extends StatefulWidget {
+  final String? address;
+  
+  const TransactionHistoryPage({super.key, this.address});
+
+  @override
+  State<TransactionHistoryPage> createState() => _TransactionHistoryPageState();
+}
+
+class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _transactions = [];
+  String _filterType = 'all'; // all, transfer, bet, exchange
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactions();
+  }
+
+  Future<void> _loadTransactions() async {
+    if (widget.address == null || widget.address!.isEmpty) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      // 加载积分流水（竞猜、兑换）
+      final pointsResult = await BettingApiService.getTransactions(widget.address!);
+      if (pointsResult['success']) {
+        setState(() {
+          _transactions = List<Map<String, dynamic>>.from(pointsResult['transactions']);
+        });
+      }
+    } catch (e) {
+      print('加载账单失败: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  List<Map<String, dynamic>> get _filteredTransactions {
+    if (_filterType == 'all') return _transactions;
+    return _transactions.where((t) => t['type'] == _filterType).toList();
+  }
+
+  Color _getTypeColor(String type) {
+    switch (type) {
+      case 'convert':
+        return Colors.blue;
+      case 'bet':
+        return Colors.orange;
+      case 'win':
+        return Colors.green;
+      case 'exchange':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getTypeName(String type) {
+    switch (type) {
+      case 'convert':
+        return '转换积分';
+      case 'bet':
+        return '竞猜下注';
+      case 'win':
+        return '竞猜奖励';
+      case 'exchange':
+        return '积分兑换';
+      default:
+        return type;
+    }
+  }
+
+  IconData _getTypeIcon(String type) {
+    switch (type) {
+      case 'convert':
+        return Icons.swap_horiz;
+      case 'bet':
+        return Icons.sports_esports;
+      case 'win':
+        return Icons.emoji_events;
+      case 'exchange':
+        return Icons.attach_money;
+      default:
+        return Icons.receipt;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('暂无交易记录', style: TextStyle(color: Colors.white54)),
+    if (widget.address == null || widget.address!.isEmpty) {
+      return const Center(
+        child: Text('请先创建或导入钱包', style: TextStyle(color: Colors.white54)),
+      );
+    }
+
+    return Scaffold(
+      body: Column(
+        children: [
+          // 筛选标签
+          Container(
+            color: const Color(0xFF1A1A3E),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                _buildFilterChip('all', '全部'),
+                const SizedBox(width: 8),
+                _buildFilterChip('convert', '转换'),
+                const SizedBox(width: 8),
+                _buildFilterChip('bet', '竞猜'),
+                const SizedBox(width: 8),
+                _buildFilterChip('exchange', '兑换'),
+              ],
+            ),
+          ),
+          // 账单列表
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredTransactions.isEmpty
+                    ? const Center(
+                        child: Text('暂无账单记录', style: TextStyle(color: Colors.white54)),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _filteredTransactions.length,
+                        itemBuilder: (context, index) {
+                          final tx = _filteredTransactions[index];
+                          return _buildTransactionCard(tx);
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String value, String label) {
+    final isSelected = _filterType == value;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() => _filterType = value);
+      },
+      backgroundColor: const Color(0xFF2A2A4E),
+      selectedColor: const Color(0xFF00FF88).withOpacity(0.3),
+      labelStyle: TextStyle(
+        color: isSelected ? const Color(0xFF00FF88) : Colors.white70,
+      ),
+    );
+  }
+
+  Widget _buildTransactionCard(Map<String, dynamic> tx) {
+    final type = tx['transaction_type'] ?? 'unknown';
+    final amount = double.parse(tx['amount'].toString());
+    final description = tx['description'] ?? '';
+    final createdAt = tx['created_at'] ?? '';
+    final balanceAfter = tx['balance_after'] != null ? double.parse(tx['balance_after'].toString()) : 0.0;
+
+    return Card(
+      color: const Color(0xFF1A1A3E),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: _getTypeColor(type).withOpacity(0.2),
+          child: Icon(_getTypeIcon(type), color: _getTypeColor(type)),
+        ),
+        title: Text(
+          _getTypeName(type),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(description, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+            Text(createdAt, style: const TextStyle(fontSize: 11, color: Colors.white54)),
+          ],
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '${amount > 0 ? '+' : ''}${amount.toStringAsFixed(2)} 积分',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: amount > 0 ? Colors.green : Colors.red,
+              ),
+            ),
+            Text(
+              '余额: ${balanceAfter.toStringAsFixed(2)}',
+              style: const TextStyle(fontSize: 11, color: Colors.white54),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('设置页面', style: TextStyle(color: Colors.white54)),
-    );
-  }
-}

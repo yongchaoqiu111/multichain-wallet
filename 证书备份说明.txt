@@ -1,0 +1,35 @@
+=====================================
+多链钱包 Android 正式签名证书备份
+=====================================
+
+备份时间：2026年5月31日
+
+【证书文件】
+- wallet-release.keystore（2.2KB）
+- key.properties
+
+【证书信息】
+- 别名（Alias）：wallet
+- 密钥库密码：Wq3829xZ!mP
+- 密钥密码：Wq3829xZ!mP
+- 有效期：10000天（约27年，至2053年10月16日）
+- 所有者：CN=Chase Qiu, OU=Wallet, O=Personal, L=Shanghai, ST=Shanghai, C=CN
+
+【应用信息】
+- 应用名称：多链钱包
+- 应用包名：com.chaseqiu.wallet
+- APK路径：f:\qianbao\多链钱包_v1.0.0_正式版.apk
+
+【服务器位置】
+/root/zhengshu/
+
+【重要提醒】
+1. 此证书文件丢失后无法恢复！
+2. 每次打包正式版APK都需要使用此证书
+3. 务必妥善保管密码
+4. Google Play 要求所有更新必须使用同一证书签名
+
+【使用方法】
+1. 复制 keystore 到 android/ 目录
+2. 复制 key.properties 到 android/ 目录
+3. 执行：flutter build apk --release

@@ -55,11 +55,13 @@ def get_balance(chain, address):
     decimals = config["decimals"]
 
     if chain == "TRON":
+        api_key = config.get("api_key")
+        headers = {"TRON-PRO-API-KEY": api_key} if api_key else {}
         for node in nodes:
             try:
                 url = f"{node.rstrip('/')}/wallet/getaccount"
                 data = {"address": address, "visible": True}
-                res = requests.post(url, json=data, timeout=8)
+                res = requests.post(url, json=data, headers=headers, timeout=8)
                 if res.status_code == 200:
                     result = res.json()
                     sun = result.get("balance", 0)
@@ -431,10 +433,10 @@ if __name__ == '__main__':
         print("=" * 50)
         print(" 启动钱包API服务")
         print("=" * 50)
-        print(f"服务地址: http://{Config.API_HOST}:{Config.API_PORT}")
+        print(f"服务地址: http://0.0.0.0:5000")
         print(f"调试模式: {Config.DEBUG}")
         print("=" * 50)
-        app.run(host=Config.API_HOST, port=Config.API_PORT, debug=Config.DEBUG)
+        app.run(host='0.0.0.0', port=5000, debug=False)
     except Exception as e:
         print(f"启动失败: {e}")
         import traceback

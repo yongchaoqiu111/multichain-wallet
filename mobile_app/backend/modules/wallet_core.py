@@ -1,5 +1,5 @@
 """
-多链钱包核心模块 - 移动端后端专�?支持 BSC / ETH / TRON
+多链钱包核心模块 - 移动端后端专?支持 BSC / ETH / TRON
 """
 from web3 import Web3
 from tronpy import Tron
@@ -73,14 +73,15 @@ def _set_cached_balance(chain: str, address: str, balance: float):
         'timestamp': time.time()
     }
 
-def _get_trx_balance(nodes, address):
+def _get_trx_balance(nodes, address, api_key=None):
     if not address.startswith("T"):
-        raise InvalidAddressError(f"TRON 地址必须 T 开�? {address}")
+        raise InvalidAddressError(f"TRON 地址必须 T 开头: {address}")
+    headers = {"TRON-PRO-API-KEY": api_key} if api_key else {}
     for node in nodes:
         try:
             url = f"{node.rstrip('/')}/wallet/getaccount"
             data = {"address": address, "visible": True}
-            res = requests.post(url, json=data, timeout=8)
+            res = requests.post(url, json=data, headers=headers, timeout=8)
             if res.status_code == 200:
                 result = res.json()
                 sun = result.get("balance", 0)
@@ -88,11 +89,11 @@ def _get_trx_balance(nodes, address):
                 return trx
         except Exception as e:
             continue
-    raise NodeRequestError("所�?TRON 节点查询失败")
+    raise NodeRequestError("所有 TRON 节点查询失败")
 
 def _get_evm_balance(chain, nodes, address, decimals):
     if not address.startswith("0x"):
-        raise InvalidAddressError(f"{chain} 地址必须 0x 开�? {address}")
+        raise InvalidAddressError(f"{chain} 地址必须 0x 开头: {address}")
     for node in nodes:
         try:
             data = {
@@ -109,7 +110,7 @@ def _get_evm_balance(chain, nodes, address, decimals):
                 return balance
         except Exception as e:
             continue
-    raise NodeRequestError(f"所�?{chain} 节点查询失败")
+    raise NodeRequestError(f"所有{chain} 节点查询失败")
 
 def get_balance(chain: str, address: str):
     cached_balance, is_cached = _get_cached_balance(chain, address)
@@ -117,14 +118,15 @@ def get_balance(chain: str, address: str):
         return cached_balance
     
     if chain not in CHAIN_CONFIG:
-        raise InvalidChainError(f"不支持的�? {chain}")
+        raise InvalidChainError(f"不支持的链: {chain}")
 
     config = CHAIN_CONFIG[chain]
     nodes = config["nodes"]
     decimals = config["decimals"]
 
     if chain == "TRON":
-        balance = _get_trx_balance(nodes, address)
+        api_key = config.get("api_key")
+        balance = _get_trx_balance(nodes, address, api_key)
     else:
         balance = _get_evm_balance(chain, nodes, address, decimals)
     
@@ -134,7 +136,7 @@ def get_balance(chain: str, address: str):
 class MultiChainWallet:
     def __init__(self, chain="BSC", private_key=None, mnemonic=None):
         if chain not in CHAIN_CONFIG:
-            raise InvalidChainError(f"不支持的�? {chain}")
+            raise InvalidChainError(f"不支持的链: {chain}")
         
         self.chain = chain
         self.rpc = CHAIN_CONFIG[chain]["nodes"][0]
